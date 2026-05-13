@@ -3,8 +3,10 @@ package persistent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/evrone/go-clean-template/internal/entity"
+	"github.com/evrone/go-clean-template/pkg/cache"
 	"github.com/evrone/go-clean-template/pkg/postgres"
 )
 
@@ -13,15 +15,26 @@ const _defaultEntityCap = 64
 // TranslationRepo -.
 type TranslationRepo struct {
 	*postgres.Postgres
+	cache *cache.Cache
 }
 
 // NewTranslationRepo -.
-func NewTranslationRepo(pg *postgres.Postgres) *TranslationRepo {
-	return &TranslationRepo{pg}
+func NewTranslationRepo(pg *postgres.Postgres, cache *cache.Cache) *TranslationRepo {
+	return &TranslationRepo{pg, cache}
 }
 
 // GetHistory -.
 func (r *TranslationRepo) GetHistory(ctx context.Context, userID string) ([]entity.Translation, error) {
+	cacheKey := fmt.Sprintf("translation_history:%s", userID)
+	var entities []entity.Translation
+
+	if r.cache != nil {
+		err := r.cache.Get(ctx, cacheKey, &entities)
+		if err == nil {
+			return entities, nil
+		}
+	}
+
 	sql, args, err := r.Builder.
 		Select("source, destination, original, translation").
 		From("history").
@@ -37,7 +50,7 @@ func (r *TranslationRepo) GetHistory(ctx context.Context, userID string) ([]enti
 	}
 	defer rows.Close()
 
-	entities := make([]entity.Translation, 0, _defaultEntityCap)
+	entities = make([]entity.Translation, 0, _defaultEntityCap)
 
 	for rows.Next() {
 		e := entity.Translation{}
@@ -48,6 +61,10 @@ func (r *TranslationRepo) GetHistory(ctx context.Context, userID string) ([]enti
 		}
 
 		entities = append(entities, e)
+	}
+
+	if r.cache != nil {
+		_ = r.cache.Set(ctx, cacheKey, entities, 10*time.Minute)
 	}
 
 	return entities, nil
@@ -67,6 +84,10 @@ func (r *TranslationRepo) Store(ctx context.Context, userID string, t entity.Tra
 	_, err = r.Pool.Exec(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("TranslationRepo - Store - r.Pool.Exec: %w", err)
+	}
+
+	if r.cache != nil {
+		_ = r.cache.Delete(ctx, fmt.Sprintf("translation_history:%s", userID))
 	}
 
 	return nil

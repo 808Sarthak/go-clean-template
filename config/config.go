@@ -20,6 +20,7 @@ type (
 		JWT     jwt
 		Metrics metrics
 		Swagger swagger
+		Redis   redis
 	}
 
 	// App -.
@@ -77,6 +78,11 @@ type (
 	// Swagger -.
 	swagger struct {
 		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
+	}
+
+	// Redis -.
+	redis struct {
+		URL string `env:"REDIS_URL,required"`
 	}
 )
 

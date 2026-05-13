@@ -2,6 +2,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -18,6 +19,7 @@ import (
 	"github.com/evrone/go-clean-template/internal/usecase/task"
 	"github.com/evrone/go-clean-template/internal/usecase/translation"
 	"github.com/evrone/go-clean-template/internal/usecase/user"
+	"github.com/evrone/go-clean-template/pkg/cache"
 	"github.com/evrone/go-clean-template/pkg/grpcserver"
 	"github.com/evrone/go-clean-template/pkg/httpserver"
 	"github.com/evrone/go-clean-template/pkg/jwt"
@@ -25,6 +27,8 @@ import (
 	natsRPCServer "github.com/evrone/go-clean-template/pkg/nats/nats_rpc/server"
 	"github.com/evrone/go-clean-template/pkg/postgres"
 	rmqRPCServer "github.com/evrone/go-clean-template/pkg/rabbitmq/rmq_rpc/server"
+	"github.com/evrone/go-clean-template/pkg/ratelimit"
+	"github.com/evrone/go-clean-template/pkg/redis"
 	pbgrpc "google.golang.org/grpc"
 )
 
@@ -41,10 +45,10 @@ type servers struct {
 	http *httpserver.Server
 }
 
-func initUseCases(pg *postgres.Postgres, jwtManager *jwt.Manager) useCases {
+func initUseCases(pg *postgres.Postgres, c *cache.Cache, jwtManager *jwt.Manager) useCases {
 	userRepo := persistent.NewUserRepo(pg)
 	taskRepo := persistent.NewTaskRepo(pg)
-	translationRepo := persistent.NewTranslationRepo(pg)
+	translationRepo := persistent.NewTranslationRepo(pg, c)
 
 	return useCases{
 		user:        user.New(userRepo, jwtManager),
@@ -53,7 +57,7 @@ func initUseCases(pg *postgres.Postgres, jwtManager *jwt.Manager) useCases {
 	}
 }
 
-func initServers(cfg *config.Config, uc useCases, jwtManager *jwt.Manager, l logger.Interface) servers {
+func initServers(cfg *config.Config, uc useCases, rl *ratelimit.Limiter, jwtManager *jwt.Manager, l logger.Interface) servers {
 	// RabbitMQ RPC Server
 	rmqRouter := amqprpc.NewRouter(uc.translation, uc.user, uc.task, jwtManager, l)
 
@@ -79,7 +83,7 @@ func initServers(cfg *config.Config, uc useCases, jwtManager *jwt.Manager, l log
 
 	// HTTP Server
 	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port), httpserver.Prefork(cfg.HTTP.UsePreforkMode))
-	restapi.NewRouter(httpServer.App, cfg, uc.translation, uc.user, uc.task, jwtManager, l)
+	restapi.NewRouter(httpServer.App, cfg, uc.translation, uc.user, uc.task, rl, jwtManager, l)
 
 	return servers{
 		rmq:  rmqServer,
@@ -147,11 +151,24 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
+	// Redis
+	r, err := redis.New(context.Background(), cfg.Redis.URL)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - redis.New: %w", err))
+	}
+	defer r.Close()
+
+	// Cache
+	c := cache.New(r.Client)
+
+	// Rate Limiter
+	rl := ratelimit.New(r.Client)
+
 	// JWT
 	jwtManager := jwt.New(cfg.JWT.Secret, cfg.JWT.TokenExpiry)
 
-	uc := initUseCases(pg, jwtManager)
-	s := initServers(cfg, uc, jwtManager, l)
+	uc := initUseCases(pg, c, jwtManager)
+	s := initServers(cfg, uc, rl, jwtManager, l)
 	s.startServers()
 	s.waitForShutdown(l)
 }

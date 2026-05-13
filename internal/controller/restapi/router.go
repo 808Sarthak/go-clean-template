@@ -2,6 +2,7 @@ package restapi
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/evrone/go-clean-template/config"
@@ -11,6 +12,7 @@ import (
 	"github.com/evrone/go-clean-template/internal/usecase"
 	"github.com/evrone/go-clean-template/pkg/jwt"
 	"github.com/evrone/go-clean-template/pkg/logger"
+	"github.com/evrone/go-clean-template/pkg/ratelimit"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 )
@@ -26,7 +28,7 @@ import (
 //	@securityDefinitions.apikey BearerAuth
 //	@in header
 //	@name Authorization
-func NewRouter(app *fiber.App, cfg *config.Config, t usecase.Translation, u usecase.User, tk usecase.Task, jwtManager *jwt.Manager, l logger.Interface) {
+func NewRouter(app *fiber.App, cfg *config.Config, t usecase.Translation, u usecase.User, tk usecase.Task, rl *ratelimit.Limiter, jwtManager *jwt.Manager, l logger.Interface) {
 	// Options
 	app.Use(middleware.Logger(l))
 	app.Use(middleware.Recovery(l))
@@ -47,7 +49,7 @@ func NewRouter(app *fiber.App, cfg *config.Config, t usecase.Translation, u usec
 	app.Get("/healthz", func(ctx *fiber.Ctx) error { return ctx.SendStatus(http.StatusOK) })
 
 	// Routers
-	apiV1Group := app.Group("/v1")
+	apiV1Group := app.Group("/v1", rl.Middleware(10, time.Minute))
 	{
 		v1.NewRoutes(apiV1Group, t, u, tk, jwtManager, l)
 	}

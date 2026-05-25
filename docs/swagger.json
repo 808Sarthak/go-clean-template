@@ -1,8 +1,13 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "Multi-domain clean architecture template with translation, user, and task management",
+        "title": "Go Clean Template API",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:8080",
+    "basePath": "/v1",
     "paths": {
         "/auth/login": {
             "post": {
@@ -112,11 +117,6 @@
         },
         "/tasks": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "List tasks for the current user with optional filtering",
                 "produces": [
                     "application/json"
@@ -172,14 +172,14 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            },
-            "post": {
+                },
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ],
+                ]
+            },
+            "post": {
                 "description": "Create a new task for the current user",
                 "consumes": [
                     "application/json"
@@ -228,16 +228,16 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            }
-        },
-        "/tasks/{id}": {
-            "get": {
+                },
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ],
+                ]
+            }
+        },
+        "/tasks/{id}": {
+            "get": {
                 "description": "Get a task by ID",
                 "produces": [
                     "application/json"
@@ -287,14 +287,14 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            },
-            "put": {
+                },
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ],
+                ]
+            },
+            "put": {
                 "description": "Update task title and description",
                 "consumes": [
                     "application/json"
@@ -362,14 +362,14 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            },
-            "delete": {
+                },
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ],
+                ]
+            },
+            "delete": {
                 "description": "Delete a task by ID",
                 "tags": [
                     "tasks"
@@ -407,16 +407,16 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            }
-        },
-        "/tasks/{id}/status": {
-            "patch": {
+                },
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ],
+                ]
+            }
+        },
+        "/tasks/{id}/status": {
+            "patch": {
                 "description": "Change task status (todo -\u003e in_progress -\u003e done, or in_progress -\u003e todo)",
                 "consumes": [
                     "application/json"
@@ -484,16 +484,16 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            }
-        },
-        "/translation/do-translate": {
-            "post": {
+                },
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ],
+                ]
+            }
+        },
+        "/translation/do-translate": {
+            "post": {
                 "description": "Translate a text",
                 "consumes": [
                     "application/json"
@@ -542,16 +542,16 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            }
-        },
-        "/translation/history": {
-            "get": {
+                },
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ],
+                ]
+            }
+        },
+        "/translation/history": {
+            "get": {
                 "description": "Show all translation history for current user",
                 "produces": [
                     "application/json"
@@ -580,737 +580,16 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            }
-        },
-        "/user/add": {
-            "post": {
-                "description": "Create a new CMS user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Add User",
-                "operationId": "cms-user-add",
-                "parameters": [
-                    {
-                        "description": "User data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.CreateUser"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/addRole": {
-            "post": {
-                "description": "Create a new CMS role",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Add Role",
-                "operationId": "cms-role-add",
-                "parameters": [
-                    {
-                        "description": "Role data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.CreateRole"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/allMappingsByRole": {
-            "get": {
-                "description": "Get all role-menu mappings for a given role",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "All Mappings By Role",
-                "operationId": "cms-mappings-by-role",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Role ID",
-                        "name": "role_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/allMenus": {
-            "get": {
-                "description": "Get all available menu IDs",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "All Menus",
-                "operationId": "cms-all-menus",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/allUserMenus": {
-            "get": {
-                "description": "Get all menu items from XML",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "All User Menus",
-                "operationId": "cms-all-user-menus",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/deleteRole/{role_id}": {
-            "post": {
-                "description": "Delete a CMS role by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Delete Role",
-                "operationId": "cms-role-delete",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Role ID",
-                        "name": "role_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/deleteUser/{cmsuserId}": {
-            "post": {
-                "description": "Delete a CMS user by ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Delete User",
-                "operationId": "cms-user-delete",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "CMS User ID",
-                        "name": "cmsuserId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/emailResponse": {
-            "post": {
-                "description": "Record email response",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Email Response",
-                "operationId": "cms-user-email-response",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/fetchAllCmsRoleMasters": {
-            "get": {
-                "description": "Get paginated list of all CMS role masters",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Fetch All Role Masters",
-                "operationId": "cms-role-fetch-all",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/fetchAllCmsRoleMastersByTenant": {
-            "get": {
-                "description": "Get all CMS role masters for a specific tenant",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Fetch All Role Masters By Tenant",
-                "operationId": "cms-role-by-tenant",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Tenant ID",
-                        "name": "tenant_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/fetchAllCmsRoleMasterswithoutlimit": {
-            "get": {
-                "description": "Get all CMS role masters without pagination",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Fetch All Role Masters Without Limit",
-                "operationId": "cms-role-fetch-all-no-limit",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/fetchAllUsers": {
-            "get": {
-                "description": "Get paginated list of all CMS users",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Fetch All Users",
-                "operationId": "cms-user-fetch-all",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/fetchAllUsersByTenant": {
-            "get": {
-                "description": "Get paginated list of users for a specific tenant",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Fetch All Users By Tenant",
-                "operationId": "cms-user-by-tenant",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Tenant ID",
-                        "name": "tenant_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/fetchCmsRoleMastersByTenant": {
-            "get": {
-                "description": "Get paginated list of role masters for a specific tenant",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Fetch Role Masters By Tenant",
-                "operationId": "cms-role-masters-by-tenant",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Tenant ID",
-                        "name": "tenant_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/fetchUser/{cmsuserId}": {
-            "get": {
-                "description": "Get a CMS user by ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Fetch User",
-                "operationId": "cms-user-fetch-one",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "CMS User ID",
-                        "name": "cmsuserId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/findUserByEmail": {
-            "post": {
-                "description": "Check if a user exists by email address",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Find User By Email",
-                "operationId": "cms-user-find-by-email",
-                "parameters": [
-                    {
-                        "description": "Email",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.FindUserByEmail"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/forgetPassword": {
-            "post": {
-                "description": "Send forget password email to user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Forget Password",
-                "operationId": "cms-user-forget-password",
-                "parameters": [
-                    {
-                        "description": "Email address",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.ForgetPassword"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/getGlobalUserByRole": {
-            "get": {
-                "description": "Get a global CMS user filtered by role type and tenant",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Get Global User By Role",
-                "operationId": "cms-user-global-by-role",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Role type",
-                        "name": "uroleType",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Tenant ID",
-                        "name": "tenant_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/getMultiStudioUserDetails/{cmsuserId}": {
-            "get": {
-                "description": "Get all studio mappings for a CMS user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Get Multi Studio User Details",
-                "operationId": "cms-user-multi-studio",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "CMS User ID",
-                        "name": "cmsuserId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/getRoleById/{role_id}": {
-            "get": {
-                "description": "Get a CMS role by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Get Role By ID",
-                "operationId": "cms-role-get-by-id",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Role ID",
-                        "name": "role_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/getRoleByName": {
-            "post": {
-                "description": "Get a CMS role by its name",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Get Role By Name",
-                "operationId": "cms-role-get-by-name",
-                "parameters": [
-                    {
-                        "description": "Role name",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.GetRoleByName"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/insertUserRoleMappings": {
-            "get": {
-                "description": "Insert menu mappings for a role",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Insert User Role Mappings",
-                "operationId": "cms-insert-role-mappings",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Role ID",
-                        "name": "role_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated menu IDs",
-                        "name": "menu_ids",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/login": {
-            "post": {
-                "description": "Authenticate CMS user and return JWT token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "CMS User Login",
-                "operationId": "cms-user-login",
-                "parameters": [
-                    {
-                        "description": "Login credentials",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.CmsUserLogin"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/profile": {
-            "get": {
+                },
                 "security": [
                     {
                         "BearerAuth": []
                     }
-                ],
+                ]
+            }
+        },
+        "/user/profile": {
+            "get": {
                 "description": "Get current user profile",
                 "produces": [
                     "application/json"
@@ -1345,214 +624,12 @@
                             "$ref": "#/definitions/v1.Error"
                         }
                     }
-                }
-            }
-        },
-        "/user/resetPassword": {
-            "post": {
-                "description": "Reset user password using current password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Reset Password",
-                "operationId": "cms-user-reset-password",
-                "parameters": [
+                },
+                "security": [
                     {
-                        "description": "Reset password data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.ResetPassword"
-                        }
+                        "BearerAuth": []
                     }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/studio/{studio_id}": {
-            "get": {
-                "description": "Get all CMS users belonging to a specific studio",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Get Users By Studio",
-                "operationId": "cms-user-by-studio",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Studio ID",
-                        "name": "studio_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/update": {
-            "post": {
-                "description": "Update an existing CMS user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Update User",
-                "operationId": "cms-user-update",
-                "parameters": [
-                    {
-                        "description": "Updated user data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.UpdateUser"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/updateRole": {
-            "post": {
-                "description": "Update an existing CMS role",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Update Role",
-                "operationId": "cms-role-update",
-                "parameters": [
-                    {
-                        "description": "Updated role data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.UpdateRole"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/updateRoleMenus": {
-            "post": {
-                "description": "Update menu assignments for a role",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Update Role Menus",
-                "operationId": "cms-role-update-menus",
-                "parameters": [
-                    {
-                        "description": "Role menu data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.UpdateRoleMenus"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/userMenus": {
-            "get": {
-                "description": "Get menu items accessible by a specific user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cms-user"
-                ],
-                "summary": "Get User Menus",
-                "operationId": "cms-user-menus",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Tenant ID",
-                        "name": "tenant_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/v1.BaseForm"
-                        }
-                    }
-                }
+                ]
             }
         }
     },
@@ -1664,127 +741,6 @@
                 }
             }
         },
-        "v1.BaseForm": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Operation successful"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "success"
-                },
-                "payload": {},
-                "statusCode": {
-                    "type": "string",
-                    "example": "200"
-                },
-                "subStatusCode": {
-                    "type": "string",
-                    "example": "0"
-                }
-            }
-        },
-        "v1.CmsUserLogin": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "example": "password123"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "admin"
-                }
-            }
-        },
-        "v1.CmsUserLoginResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIs..."
-                },
-                "user": {
-                    "$ref": "#/definitions/v1.CmsUserResponse"
-                }
-            }
-        },
-        "v1.CmsUserResponse": {
-            "type": "object",
-            "properties": {
-                "contact_number": {
-                    "type": "string",
-                    "example": "+1234567890"
-                },
-                "first_name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "last_name": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "role_type": {
-                    "type": "string",
-                    "example": "ADMIN"
-                },
-                "role_type_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "studio": {
-                    "type": "string",
-                    "example": "Studio A"
-                },
-                "studio_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "tenant": {
-                    "type": "string",
-                    "example": "Tenant Corp"
-                },
-                "tenant_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "username": {
-                    "type": "string",
-                    "example": "johndoe"
-                }
-            }
-        },
-        "v1.CreateRole": {
-            "type": "object",
-            "required": [
-                "role",
-                "tenant_id"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Manages content operations"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "CONTENT_MANAGER"
-                },
-                "tenant_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
         "v1.CreateTask": {
             "type": "object",
             "required": [
@@ -1803,110 +759,12 @@
                 }
             }
         },
-        "v1.CreateUser": {
-            "type": "object",
-            "required": [
-                "first_name",
-                "last_name",
-                "password",
-                "role_type_id",
-                "studio_id",
-                "tenant_id",
-                "username"
-            ],
-            "properties": {
-                "contact_number": {
-                    "type": "string",
-                    "example": "+1234567890"
-                },
-                "first_name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "last_name": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "secret123"
-                },
-                "role_type_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "studio_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "studio_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    },
-                    "example": [
-                        1,
-                        2,
-                        3
-                    ]
-                },
-                "tenant_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "username": {
-                    "type": "string",
-                    "example": "johndoe"
-                }
-            }
-        },
         "v1.Error": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string",
                     "example": "message"
-                }
-            }
-        },
-        "v1.FindUserByEmail": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john@example.com"
-                }
-            }
-        },
-        "v1.ForgetPassword": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john@example.com"
-                }
-            }
-        },
-        "v1.GetRoleByName": {
-            "type": "object",
-            "required": [
-                "role_name",
-                "tenant_id"
-            ],
-            "properties": {
-                "role_name": {
-                    "type": "string",
-                    "example": "CONTENT_MANAGER"
-                },
-                "tenant_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         },
@@ -1949,28 +807,6 @@
                     "maxLength": 255,
                     "minLength": 3,
                     "example": "johndoe"
-                }
-            }
-        },
-        "v1.ResetPassword": {
-            "type": "object",
-            "required": [
-                "current_password",
-                "new_password",
-                "user_id"
-            ],
-            "properties": {
-                "current_password": {
-                    "type": "string",
-                    "example": "oldpass123"
-                },
-                "new_password": {
-                    "type": "string",
-                    "example": "newpass456"
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         },
@@ -2041,56 +877,6 @@
                 }
             }
         },
-        "v1.UpdateRole": {
-            "type": "object",
-            "required": [
-                "id",
-                "role",
-                "tenant_id"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Manages content operations"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "role": {
-                    "type": "string",
-                    "example": "CONTENT_MANAGER"
-                },
-                "tenant_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "v1.UpdateRoleMenus": {
-            "type": "object",
-            "required": [
-                "menu_ids",
-                "role_id"
-            ],
-            "properties": {
-                "menu_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "menu1",
-                        "menu2",
-                        "menu3"
-                    ]
-                },
-                "role_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
         "v1.UpdateTask": {
             "type": "object",
             "required": [
@@ -2108,48 +894,13 @@
                     "example": "Updated task"
                 }
             }
-        },
-        "v1.UpdateUser": {
-            "type": "object",
-            "required": [
-                "first_name",
-                "id",
-                "last_name",
-                "role_type_id"
-            ],
-            "properties": {
-                "contact_number": {
-                    "type": "string",
-                    "example": "+1234567890"
-                },
-                "first_name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "last_name": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "role_type_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "studio_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    },
-                    "example": [
-                        1,
-                        2,
-                        3
-                    ]
-                }
-            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

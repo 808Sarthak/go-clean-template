@@ -6,12 +6,14 @@ import (
 	"errors"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	// migrate tools
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -20,6 +22,44 @@ const (
 )
 
 func init() {
+	// Load .env file - try to find it smartly
+
+	// 1. Try PROJECT_ROOT environment variable first
+	if projectRoot := os.Getenv("PROJECT_ROOT"); projectRoot != "" {
+		envPath := filepath.Join(projectRoot, ".env")
+		if _, err := os.Stat(envPath); err == nil {
+			if err := godotenv.Load(envPath); err == nil {
+				log.Printf("Loaded .env from: %s", envPath)
+				// Continue to check PG_URL
+			}
+		}
+	}
+
+	// 2. Walk up from current working directory to find .env
+	if _, err := os.LookupEnv("PG_URL"); err == false { // PG_URL not set yet
+		if wd, err := os.Getwd(); err == nil {
+			for {
+				envPath := filepath.Join(wd, ".env")
+				if _, err := os.Stat(envPath); err == nil {
+					if err := godotenv.Load(envPath); err == nil {
+						log.Printf("Loaded .env from: %s", envPath)
+						break
+					}
+				}
+
+				// Move to parent directory
+				parent := filepath.Dir(wd)
+				if parent == wd { // Reached root directory
+					break
+				}
+				wd = parent
+			}
+		}
+	}
+
+	// 3. If nothing found, try current directory as last resort
+	_ = godotenv.Load(".env")
+
 	databaseURL, ok := os.LookupEnv("PG_URL")
 	if !ok || len(databaseURL) == 0 {
 		log.Fatalf("migrate: environment variable not declared: PG_URL")

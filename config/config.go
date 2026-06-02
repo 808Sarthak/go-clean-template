@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/caarlos0/env/v11"
@@ -13,7 +14,7 @@ type (
 		App     app
 		HTTP    http
 		Log     log
-		PG      pg
+		DB      db
 		GRPC    grpc
 		RMQ     rmq
 		NATS    nats
@@ -40,10 +41,14 @@ type (
 		Level string `env:"LOG_LEVEL,required"`
 	}
 
-	// PG -.
-	pg struct {
-		PoolMax int    `env:"PG_POOL_MAX,required"`
-		URL     string `env:"PG_URL,required"`
+	// DB -.
+	db struct {
+		PoolMax  int    `env:"DB_POOL_MAX,required"`
+		User     string `env:"DB_USER,required"`
+		Password string `env:"DB_PASSWORD,required"`
+		Host     string `env:"DB_HOST" envDefault:"127.0.0.1"`
+		Port     string `env:"DB_PORT" envDefault:"3306"`
+		Name     string `env:"DB_NAME,required"`
 	}
 
 	// GRPC -.
@@ -85,6 +90,15 @@ type (
 		URL string `env:"REDIS_URL,required"`
 	}
 )
+
+// DSN builds a MySQL connection string from DB settings.
+func (c *Config) DSN() string {
+	user := url.QueryEscape(c.DB.User)
+	pass := url.QueryEscape(c.DB.Password)
+
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local&charset=utf8mb4&multiStatements=true",
+		user, pass, c.DB.Host, c.DB.Port, c.DB.Name)
+}
 
 // NewConfig returns app config.
 func NewConfig() (*Config, error) {

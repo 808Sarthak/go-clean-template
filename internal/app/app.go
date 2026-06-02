@@ -24,8 +24,8 @@ import (
 	"github.com/evrone/go-clean-template/pkg/httpserver"
 	"github.com/evrone/go-clean-template/pkg/jwt"
 	"github.com/evrone/go-clean-template/pkg/logger"
+	"github.com/evrone/go-clean-template/pkg/mysql"
 	natsRPCServer "github.com/evrone/go-clean-template/pkg/nats/nats_rpc/server"
-	"github.com/evrone/go-clean-template/pkg/postgres"
 	rmqRPCServer "github.com/evrone/go-clean-template/pkg/rabbitmq/rmq_rpc/server"
 	"github.com/evrone/go-clean-template/pkg/ratelimit"
 	"github.com/evrone/go-clean-template/pkg/redis"
@@ -45,10 +45,10 @@ type servers struct {
 	http *httpserver.Server
 }
 
-func initUseCases(pg *postgres.Postgres, c *cache.Cache, jwtManager *jwt.Manager) useCases {
-	userRepo := persistent.NewUserRepo(pg)
-	taskRepo := persistent.NewTaskRepo(pg)
-	translationRepo := persistent.NewTranslationRepo(pg, c)
+func initUseCases(db *mysql.MySQL, c *cache.Cache, jwtManager *jwt.Manager) useCases {
+	userRepo := persistent.NewUserRepo(db)
+	taskRepo := persistent.NewTaskRepo(db)
+	translationRepo := persistent.NewTranslationRepo(db, c)
 
 	return useCases{
 		user:        user.New(userRepo, jwtManager),
@@ -145,11 +145,11 @@ func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
 	// Repository
-	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
+	db, err := mysql.New(cfg.DSN(), mysql.MaxPoolSize(cfg.DB.PoolMax))
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
+		l.Fatal(fmt.Errorf("app - Run - mysql.New: %w", err))
 	}
-	defer pg.Close()
+	defer db.Close()
 
 	// Redis
 	r, err := redis.New(context.Background(), cfg.Redis.URL)
@@ -167,7 +167,7 @@ func Run(cfg *config.Config) {
 	// JWT
 	jwtManager := jwt.New(cfg.JWT.Secret, cfg.JWT.TokenExpiry)
 
-	uc := initUseCases(pg, c, jwtManager)
+	uc := initUseCases(db, c, jwtManager)
 	s := initServers(cfg, uc, rl, jwtManager, l)
 	s.startServers()
 	s.waitForShutdown(l)

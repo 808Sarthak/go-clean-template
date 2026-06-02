@@ -105,12 +105,12 @@ migrate-create:  ### create new migration
 .PHONY: migrate-create
 
 migrate-up: ### migration up
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+	migrate -path migrations -database 'mysql://$(DB_USER):$(DB_PASSWORD)@tcp($(DB_HOST):$(DB_PORT))/$(DB_NAME)?parseTime=true&loc=Local&charset=utf8mb4&multiStatements=true' up
 .PHONY: migrate-up
 
 bin-deps: ### install tools
 	go install tool
-	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
+	go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate
 .PHONY: bin-deps
 
 pre-commit: deps swag-v1 proto-v1 mock format linter-golangci test ### run pre-commit

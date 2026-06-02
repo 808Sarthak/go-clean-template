@@ -142,8 +142,8 @@ make compose-up-all
   - [v1/auth.proto](docs/proto/v1/auth.proto)
   - [v1/task.proto](docs/proto/v1/task.proto)
   - [v1/translation.history.proto](docs/proto/v1/translation.history.proto)
-- PostgreSQL:
-  - `postgres://user:myAwEsOm3pa55@w0rd@127.0.0.1:5432/db`
+- MySQL:
+  - `mysql://user:myAwEsOm3pa55w0rd@tcp(127.0.0.1:3306)/db?parseTime=true&loc=Local&charset=utf8mb4&multiStatements=true`
 - RabbitMQ:
   - http://rabbitmq.lvh.me | http://127.0.0.1:15672
   - Credentials: `guest` / `guest`

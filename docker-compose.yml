@@ -2,12 +2,10 @@ version: "3.9"
 
 
 x-db-environment: &x-db-environment
-  POSTGRES_SSL_MODE: "disable"
-  POSTGRES_HOST: "db"
-  POSTGRES_PORT: "5432"
-  POSTGRES_DB: "db"
-  POSTGRES_PASSWORD: "myAwEsOm3pa55@w0rd"
-  POSTGRES_USER: "user"
+  MYSQL_DATABASE: "db"
+  MYSQL_PASSWORD: "myAwEsOm3pa55w0rd"
+  MYSQL_ROOT_PASSWORD: "root"
+  MYSQL_USER: "user"
 
 x-rabbitmq-variables: &x-rabbitmq-variables
   RABBITMQ_DEFAULT_USER: "guest"
@@ -23,9 +21,13 @@ x-backend-app-environment: &x-backend-app-environment
   HTTP_USE_PREFORK_MODE: "false"
   # Logger
   LOG_LEVEL: "debug"
-  # PG
-  PG_POOL_MAX: "2"
-  PG_URL: "postgres://user:myAwEsOm3pa55@w0rd@db:5432/db"
+  # DB
+  DB_POOL_MAX: "2"
+  DB_USER: "user"
+  DB_PASSWORD: "myAwEsOm3pa55w0rd"
+  DB_HOST: "db"
+  DB_PORT: "3306"
+  DB_NAME: "db"
   # gRPC
   GRPC_PORT: "8081"
   # RMQ
@@ -49,13 +51,13 @@ x-backend-app-environment: &x-backend-app-environment
 services:
   db:
     container_name: db
-    image: postgres:18.3-alpine
+    image: mysql:8.4
     environment:
       <<: *x-db-environment
     volumes:
-      - db_data:/var/lib/postgresql/18/data
+      - db_data:/var/lib/mysql
     ports:
-      - "5432:5432"
+      - "3306:3306"
     networks:
       app_network:
         aliases:

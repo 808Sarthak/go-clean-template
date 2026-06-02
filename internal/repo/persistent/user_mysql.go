@@ -2,29 +2,28 @@ package persistent
 
 import (
 	"context"
+	dbsql "database/sql"
 	"errors"
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/evrone/go-clean-template/internal/entity"
-	"github.com/evrone/go-clean-template/pkg/postgres"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/evrone/go-clean-template/pkg/mysql"
 )
 
 // UserRepo -.
 type UserRepo struct {
-	*postgres.Postgres
+	*mysql.MySQL
 }
 
 // NewUserRepo -.
-func NewUserRepo(pg *postgres.Postgres) *UserRepo {
-	return &UserRepo{pg}
+func NewUserRepo(db *mysql.MySQL) *UserRepo {
+	return &UserRepo{db}
 }
 
 // Store -.
 func (r *UserRepo) Store(ctx context.Context, user *entity.User) error {
-	sql, args, err := r.Builder.
+	query, args, err := r.Builder.
 		Insert("users").
 		Columns("id, username, email, password_hash, created_at, updated_at").
 		Values(user.ID, user.Username, user.Email, user.PasswordHash, user.CreatedAt, user.UpdatedAt).
@@ -33,10 +32,9 @@ func (r *UserRepo) Store(ctx context.Context, user *entity.User) error {
 		return fmt.Errorf("UserRepo - Store - r.Builder: %w", err)
 	}
 
-	_, err = r.Pool.Exec(ctx, sql, args...)
+	_, err = r.Pool.Exec(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if mysql.IsDuplicateKey(err) {
 			return entity.ErrUserAlreadyExists
 		}
 
@@ -57,7 +55,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (entity.User, e
 }
 
 func (r *UserRepo) getUser(ctx context.Context, column, value string) (entity.User, error) {
-	sql, args, err := r.Builder.
+	query, args, err := r.Builder.
 		Select("id, username, email, password_hash, created_at, updated_at").
 		From("users").
 		Where(sq.Eq{column: value}).
@@ -68,10 +66,10 @@ func (r *UserRepo) getUser(ctx context.Context, column, value string) (entity.Us
 
 	var user entity.User
 
-	err = r.Pool.QueryRow(ctx, sql, args...).
+	err = r.Pool.QueryRow(ctx, query, args...).
 		Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, dbsql.ErrNoRows) {
 			return entity.User{}, entity.ErrUserNotFound
 		}
 

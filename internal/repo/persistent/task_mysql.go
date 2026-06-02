@@ -2,29 +2,29 @@ package persistent
 
 import (
 	"context"
+	dbsql "database/sql"
 	"errors"
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/evrone/go-clean-template/internal/entity"
 	"github.com/evrone/go-clean-template/internal/repo"
-	"github.com/evrone/go-clean-template/pkg/postgres"
-	"github.com/jackc/pgx/v5"
+	"github.com/evrone/go-clean-template/pkg/mysql"
 )
 
 // TaskRepo -.
 type TaskRepo struct {
-	*postgres.Postgres
+	*mysql.MySQL
 }
 
 // NewTaskRepo -.
-func NewTaskRepo(pg *postgres.Postgres) *TaskRepo {
-	return &TaskRepo{pg}
+func NewTaskRepo(db *mysql.MySQL) *TaskRepo {
+	return &TaskRepo{db}
 }
 
 // Store -.
 func (r *TaskRepo) Store(ctx context.Context, task *entity.Task) error {
-	sql, args, err := r.Builder.
+	query, args, err := r.Builder.
 		Insert("tasks").
 		Columns("id, user_id, title, description, status, created_at, updated_at").
 		Values(task.ID, task.UserID, task.Title, task.Description, task.Status, task.CreatedAt, task.UpdatedAt).
@@ -33,7 +33,7 @@ func (r *TaskRepo) Store(ctx context.Context, task *entity.Task) error {
 		return fmt.Errorf("TaskRepo - Store - r.Builder: %w", err)
 	}
 
-	_, err = r.Pool.Exec(ctx, sql, args...)
+	_, err = r.Pool.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("TaskRepo - Store - r.Pool.Exec: %w", err)
 	}
@@ -43,7 +43,7 @@ func (r *TaskRepo) Store(ctx context.Context, task *entity.Task) error {
 
 // GetByID -.
 func (r *TaskRepo) GetByID(ctx context.Context, userID, taskID string) (entity.Task, error) {
-	sql, args, err := r.Builder.
+	query, args, err := r.Builder.
 		Select("id, user_id, title, description, status, created_at, updated_at").
 		From("tasks").
 		Where(sq.Eq{"id": taskID}).
@@ -54,10 +54,10 @@ func (r *TaskRepo) GetByID(ctx context.Context, userID, taskID string) (entity.T
 
 	var task entity.Task
 
-	err = r.Pool.QueryRow(ctx, sql, args...).
+	err = r.Pool.QueryRow(ctx, query, args...).
 		Scan(&task.ID, &task.UserID, &task.Title, &task.Description, &task.Status, &task.CreatedAt, &task.UpdatedAt)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, dbsql.ErrNoRows) {
 			return entity.Task{}, entity.ErrTaskNotFound
 		}
 
@@ -135,7 +135,7 @@ func (r *TaskRepo) List(ctx context.Context, userID string, filter repo.TaskFilt
 
 // Update -.
 func (r *TaskRepo) Update(ctx context.Context, task *entity.Task) error {
-	sql, args, err := r.Builder.
+	query, args, err := r.Builder.
 		Update("tasks").
 		Set("title", task.Title).
 		Set("description", task.Description).
@@ -147,12 +147,17 @@ func (r *TaskRepo) Update(ctx context.Context, task *entity.Task) error {
 		return fmt.Errorf("TaskRepo - Update - r.Builder: %w", err)
 	}
 
-	result, err := r.Pool.Exec(ctx, sql, args...)
+	result, err := r.Pool.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("TaskRepo - Update - r.Pool.Exec: %w", err)
 	}
 
-	if result.RowsAffected() == 0 {
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("TaskRepo - Update - result.RowsAffected: %w", err)
+	}
+
+	if affected == 0 {
 		return entity.ErrTaskNotFound
 	}
 
@@ -161,7 +166,7 @@ func (r *TaskRepo) Update(ctx context.Context, task *entity.Task) error {
 
 // Delete -.
 func (r *TaskRepo) Delete(ctx context.Context, userID, taskID string) error {
-	sql, args, err := r.Builder.
+	query, args, err := r.Builder.
 		Delete("tasks").
 		Where(sq.Eq{"id": taskID, "user_id": userID}).
 		ToSql()
@@ -169,12 +174,17 @@ func (r *TaskRepo) Delete(ctx context.Context, userID, taskID string) error {
 		return fmt.Errorf("TaskRepo - Delete - r.Builder: %w", err)
 	}
 
-	result, err := r.Pool.Exec(ctx, sql, args...)
+	result, err := r.Pool.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("TaskRepo - Delete - r.Pool.Exec: %w", err)
 	}
 
-	if result.RowsAffected() == 0 {
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("TaskRepo - Delete - result.RowsAffected: %w", err)
+	}
+
+	if affected == 0 {
 		return entity.ErrTaskNotFound
 	}
 

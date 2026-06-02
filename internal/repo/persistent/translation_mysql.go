@@ -7,20 +7,20 @@ import (
 
 	"github.com/evrone/go-clean-template/internal/entity"
 	"github.com/evrone/go-clean-template/pkg/cache"
-	"github.com/evrone/go-clean-template/pkg/postgres"
+	"github.com/evrone/go-clean-template/pkg/mysql"
 )
 
 const _defaultEntityCap = 64
 
 // TranslationRepo -.
 type TranslationRepo struct {
-	*postgres.Postgres
+	*mysql.MySQL
 	cache *cache.Cache
 }
 
 // NewTranslationRepo -.
-func NewTranslationRepo(pg *postgres.Postgres, cache *cache.Cache) *TranslationRepo {
-	return &TranslationRepo{pg, cache}
+func NewTranslationRepo(db *mysql.MySQL, cache *cache.Cache) *TranslationRepo {
+	return &TranslationRepo{db, cache}
 }
 
 // GetHistory -.
@@ -35,7 +35,7 @@ func (r *TranslationRepo) GetHistory(ctx context.Context, userID string) ([]enti
 		}
 	}
 
-	sql, args, err := r.Builder.
+	query, args, err := r.Builder.
 		Select("source, destination, original, translation").
 		From("history").
 		Where("user_id = ?", userID).
@@ -44,7 +44,7 @@ func (r *TranslationRepo) GetHistory(ctx context.Context, userID string) ([]enti
 		return nil, fmt.Errorf("TranslationRepo - GetHistory - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, args...)
+	rows, err := r.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("TranslationRepo - GetHistory - r.Pool.Query: %w", err)
 	}
@@ -72,7 +72,7 @@ func (r *TranslationRepo) GetHistory(ctx context.Context, userID string) ([]enti
 
 // Store -.
 func (r *TranslationRepo) Store(ctx context.Context, userID string, t entity.Translation) error {
-	sql, args, err := r.Builder.
+	query, args, err := r.Builder.
 		Insert("history").
 		Columns("user_id, source, destination, original, translation").
 		Values(userID, t.Source, t.Destination, t.Original, t.Translation).
@@ -81,7 +81,7 @@ func (r *TranslationRepo) Store(ctx context.Context, userID string, t entity.Tra
 		return fmt.Errorf("TranslationRepo - Store - r.Builder: %w", err)
 	}
 
-	_, err = r.Pool.Exec(ctx, sql, args...)
+	_, err = r.Pool.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("TranslationRepo - Store - r.Pool.Exec: %w", err)
 	}

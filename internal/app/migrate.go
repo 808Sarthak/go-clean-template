@@ -4,14 +4,16 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"net/url"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	// migrate tools
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 )
@@ -30,13 +32,13 @@ func init() {
 		if _, err := os.Stat(envPath); err == nil {
 			if err := godotenv.Load(envPath); err == nil {
 				log.Printf("Loaded .env from: %s", envPath)
-				// Continue to check PG_URL
+				// Continue to check DB credentials
 			}
 		}
 	}
 
 	// 2. Walk up from current working directory to find .env
-	if _, err := os.LookupEnv("PG_URL"); err == false { // PG_URL not set yet
+	if _, err := os.LookupEnv("DB_NAME"); err == false { // DB_NAME not set yet
 		if wd, err := os.Getwd(); err == nil {
 			for {
 				envPath := filepath.Join(wd, ".env")
@@ -60,12 +62,39 @@ func init() {
 	// 3. If nothing found, try current directory as last resort
 	_ = godotenv.Load(".env")
 
-	databaseURL, ok := os.LookupEnv("PG_URL")
-	if !ok || len(databaseURL) == 0 {
-		log.Fatalf("migrate: environment variable not declared: PG_URL")
+	user, ok := os.LookupEnv("DB_USER")
+	if !ok || len(user) == 0 {
+		log.Fatalf("migrate: environment variable not declared: DB_USER")
 	}
 
-	databaseURL += "?sslmode=disable"
+	password, ok := os.LookupEnv("DB_PASSWORD")
+	if !ok {
+		log.Fatalf("migrate: environment variable not declared: DB_PASSWORD")
+	}
+
+	host := os.Getenv("DB_HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+
+	port := os.Getenv("DB_PORT")
+	if port == "" {
+		port = "3306"
+	}
+
+	name, ok := os.LookupEnv("DB_NAME")
+	if !ok || len(name) == 0 {
+		log.Fatalf("migrate: environment variable not declared: DB_NAME")
+	}
+
+	databaseURL := fmt.Sprintf(
+		"mysql://%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local&charset=utf8mb4&multiStatements=true",
+		url.QueryEscape(user),
+		url.QueryEscape(password),
+		host,
+		port,
+		name,
+	)
 
 	var (
 		attempts = _defaultAttempts
@@ -79,13 +108,13 @@ func init() {
 			break
 		}
 
-		log.Printf("Migrate: postgres is trying to connect, attempts left: %d", attempts)
+		log.Printf("Migrate: mysql is trying to connect, attempts left: %d", attempts)
 		time.Sleep(_defaultTimeout)
 		attempts--
 	}
 
 	if err != nil {
-		log.Fatalf("Migrate: postgres connect error: %s", err)
+		log.Fatalf("Migrate: mysql connect error: %s", err)
 	}
 
 	err = m.Up()

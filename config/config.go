@@ -43,12 +43,12 @@ type (
 
 	// DB -.
 	db struct {
-		PoolMax  int    `env:"DB_POOL_MAX,required"`
-		User     string `env:"DB_USER,required"`
-		Password string `env:"DB_PASSWORD,required"`
+		PoolMax  int    `env:"DB_POOL_MAX" envDefault:"2"`
+		User     string `env:"DB_USER" envDefault:"root"`
+		Password string `env:"DB_PASSWORD" envDefault:"root"`
 		Host     string `env:"DB_HOST" envDefault:"127.0.0.1"`
 		Port     string `env:"DB_PORT" envDefault:"3306"`
-		Name     string `env:"DB_NAME,required"`
+		Name     string `env:"DB_NAME" envDefault:"myplex_sms"`
 	}
 
 	// GRPC -.
